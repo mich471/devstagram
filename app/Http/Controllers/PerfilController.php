@@ -56,8 +56,8 @@ class PerfilController extends Controller
             $nombreImagen = Str::uuid() . "." . $imagen->extension();
 
             // Procesar imagen
-            $imagenServidor = Image::configure(['driver' => 'gd'])->make($imagen);
-            $imagenServidor->fit(1000, 1000);
+             $imagenServidor = Image::configure(['driver' => 'gd'])->make($imagen);
+             $imagenServidor->fit(1000, 1000);
 
             $imagenPath = public_path('perfiles') . '/' . $nombreImagen;
             $imagenServidor->save($imagenPath);
