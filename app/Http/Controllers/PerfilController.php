@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Hash;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Facades\Image;
 
 class PerfilController extends Controller
 {
@@ -41,32 +41,34 @@ class PerfilController extends Controller
         if (!Hash::check($request->password, auth()->user()->password)) {
             return back()->withErrors(['password' => 'Contraseña incorrecta o no la Ingresaste']);
         }
-        
+
         //Guardar Cambios
         $usuario = User::find(auth()->user()->id);
         $usuario->username = Str::slug($request->username);
         $usuario->email = $request->email ?? auth()->user()->email;
-        
+
         if ($request->new_password) {
             $usuario->password = Hash::make($request->new_password); // Guardar la nueva contraseña
         }
-        
-        // Guardar los cambios
-        $usuario->save();
 
-        if($request->imagen) {
+        if ($request->imagen) {
             $imagen = $request->file('imagen');
             $nombreImagen = Str::uuid() . "." . $imagen->extension();
-            $manager = new ImageManager(new Driver());
-            $imagenServidor = $manager->read($imagen);
-            $imagenServidor->cover(1000,1000);
+
+            // Procesar imagen
+            $imagenServidor = Image::configure(['driver' => 'gd'])->make($imagen);
+            $imagenServidor->fit(1000, 1000);
+
             $imagenPath = public_path('perfiles') . '/' . $nombreImagen;
             $imagenServidor->save($imagenPath);
-          
+
+            $usuario->imagen = $nombreImagen;
         }
+
+        // Guardar los cambios
+        $usuario->save();
 
         //redireccionar
         return redirect()->route('posts.index', $usuario->username);
     }
-  
 }
